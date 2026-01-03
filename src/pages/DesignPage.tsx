@@ -155,7 +155,7 @@ export default function DesignPage() {
           </h1>
           <p className="text-primary-foreground/80 max-w-3xl">
             Powered by the <code className="bg-primary-foreground/10 px-2 py-0.5 rounded">maria26/Floor_Plan_LoRA</code> model, 
-            which generates architectural floor plans from text prompts. This model is part of a Bachelor Thesis 
+            which generates architectural floor plans from text prompts. This model is part of a Bachelor Thesis from MIT 
             exploring diffusion models for generating architectural floor plans from textual descriptions.
           </p>
         </div>

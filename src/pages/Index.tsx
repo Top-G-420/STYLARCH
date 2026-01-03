@@ -22,7 +22,7 @@ const quickAccessItems = [
   },
   {
     icon: FileSearch,
-    title: "Interpretation",
+    title: "Interpret Design",
     description: "Upload and analyze existing designs",
     path: "/interpret",
     color: "bg-muted text-foreground",
@@ -77,7 +77,7 @@ export default function Index() {
                 size="xl"
                 className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
               >
-                Learn More
+                <Link to="/faqs">Learn More</Link>
               </Button>
             </div>
           </div>
