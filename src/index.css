@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@300..700&display=swap');
+
+@layer base {
+  :root {
+    /* Architectural color palette */
+    --background: 210 20% 98%;
+    --foreground: 220 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 15%;
+
+    /* Deep slate blue - architectural ink */
+    --primary: 215 45% 20%;
+    --primary-foreground: 210 20% 98%;
+
+    /* Warm stone */
+    --secondary: 35 20% 92%;
+    --secondary-foreground: 220 30% 15%;
+
+    /* Blueprint muted */
+    --muted: 210 15% 94%;
+    --muted-foreground: 215 20% 45%;
+
+    /* Copper accent */
+    --accent: 25 75% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 215 45% 20%;
+
+    --radius: 0.75rem;
+
+    /* Custom architectural tokens */
+    --blueprint: 210 60% 45%;
+    --blueprint-light: 210 40% 95%;
+    --copper: 25 75% 55%;
+    --copper-dark: 25 65% 45%;
+    --stone: 35 15% 85%;
+    --stone-dark: 35 20% 70%;
+    --charcoal: 220 25% 12%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(215 45% 20%) 0%, hsl(220 30% 25%) 50%, hsl(25 75% 55% / 0.3) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 15% 97%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(25 75% 55%) 0%, hsl(35 70% 60%) 100%);
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(220 30% 15% / 0.08);
+    --shadow-medium: 0 8px 30px -8px hsl(220 30% 15% / 0.12);
+    --shadow-glow: 0 0 40px hsl(25 75% 55% / 0.2);
+
+    /* Sidebar */
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 220 30% 15%;
+    --sidebar-primary: 215 45% 20%;
+    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-accent: 35 20% 92%;
+    --sidebar-accent-foreground: 220 30% 15%;
+    --sidebar-border: 210 20% 88%;
+    --sidebar-ring: 215 45% 20%;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 220 25% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 25% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 210 20% 95%;
+    --primary-foreground: 220 25% 8%;
+
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 210 20% 95%;
+
+    --muted: 220 20% 18%;
+    --muted-foreground: 210 15% 60%;
+
+    --accent: 25 75% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 210 20% 80%;
+
+    --blueprint: 210 50% 55%;
+    --blueprint-light: 210 30% 20%;
+    --copper: 25 75% 55%;
+    --stone: 35 10% 25%;
+    --charcoal: 220 25% 6%;
+
+    --sidebar-background: 220 25% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 210 20% 95%;
+    --sidebar-primary-foreground: 220 25% 8%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 20% 20%;
+    --sidebar-ring: 210 20% 80%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .blueprint-grid {
+    background-image: 
+      linear-gradient(hsl(var(--blueprint) / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--blueprint) / 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .architectural-line {
+    @apply relative;
+  }
+
+  .architectural-line::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-16 h-0.5 bg-accent;
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-1;
+    box-shadow: var(--shadow-medium);
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-accent);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from { 
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to { 
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
