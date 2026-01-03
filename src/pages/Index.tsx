@@ -46,43 +46,46 @@ export default function Index() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-primary text-primary-foreground min-h-[80vh] flex items-center">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{ backgroundImage: `url(${heroBlueprint})` }}
+      <section className="relative overflow-hidden min-h-[80vh] flex items-center text-primary-foreground">
+        {/* Background Image + Gradient Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `linear-gradient(to right, rgba(13, 42, 148, 0.5), rgba(13, 42, 148, 0.3)), url(${heroBlueprint})`,
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/90 to-primary/70" />
-        <div className="container mx-auto px-4 py-20 lg:py-32 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
-              Welcome to <span className="text-accent">STYLARCH</span>
-            </h1>
-            <p
-              className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto animate-slide-up"
-              style={{ animationDelay: "0.1s" }}
+
+        {/* Content */}
+        <div className="container mx-auto px-4 py-20 lg:py-32 relative z-10 text-center">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in">
+            Welcome to <span className="text-accent">STYLARCH</span>
+          </h1>
+          <p
+            className="text-lg md:text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto animate-slide-up"
+            style={{ animationDelay: "0.1s" }}
+          >
+            AI-driven architectural assistant that makes professional building
+            design simple. Create, modify, and interpret floorplans in minutes
+            for homes, offices, and large commercial spaces.
+          </p>
+          <div
+            className="flex flex-wrap justify-center gap-4 animate-slide-up"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <Button variant="hero" size="xl" asChild>
+              <Link to="/design">Start Designing</Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="xl"
+              className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
-              AI-driven architectural assistant that makes professional building
-              design simple. Create, modify, and interpret floorplans in minutes
-              for homes, offices, and large commercial spaces.
-            </p>
-            <div
-              className="flex flex-wrap justify-center gap-4 animate-slide-up"
-              style={{ animationDelay: "0.2s" }}
-            >
-              <Button variant="hero" size="xl" asChild>
-                <Link to="/design">Start Designing</Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="xl"
-                className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-              >
-                <Link to="/faqs">Learn More</Link>
-              </Button>
-            </div>
+              <Link to="/faqs">Learn More</Link>
+            </Button>
           </div>
         </div>
-        {/* Decorative elements */}
+
+        {/* Decorative Gradient at bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 

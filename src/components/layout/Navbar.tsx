@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Building2, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react"; // Removed Building2
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +22,12 @@ export function Navbar() {
         <nav className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center group-hover:bg-accent transition-colors duration-300">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center group-hover:bg-accent transition-colors duration-300">
+              <img
+                src="https://raw.githubusercontent.com/Top-G-420/STYLARCH/main/picha/STYLARCH-Logo.png"
+                alt="STYLARCH Logo"
+                className="w-6 h-6 object-contain"
+              />
             </div>
             <span className="font-display text-xl font-bold text-foreground">
               STYLARCH
