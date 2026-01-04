@@ -25,8 +25,7 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
 // === IMPORTANT: REPLACE THIS WITH YOUR ACTUAL HUGGING FACE SPACE URL ===
-const API_BASE_URL = "https://your-username-your-space-name.hf.space"; 
-// Example: const API_BASE_URL = "https://johnsmith-floorplan-generator.hf.space";
+const API_BASE_URL = "https://top-g-420-stylarch.hf.space"; 
 // ======================================================================
 
 const projectTypes = [
