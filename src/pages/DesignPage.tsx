@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { 
-  Wand2, 
-  Download, 
-  Save, 
-  Info, 
+import {
+  Wand2,
+  Download,
+  Save,
+  Info,
   Loader2,
   Plus,
   Minus
@@ -57,7 +57,7 @@ export default function DesignPage() {
   const [searchParams] = useSearchParams();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
-  
+ 
   // Form state
   const [projectName, setProjectName] = useState("");
   const [projectType, setProjectType] = useState("apartment");
@@ -70,7 +70,7 @@ export default function DesignPage() {
   const [windows, setWindows] = useState("many");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [specialRequirements, setSpecialRequirements] = useState("");
-
+ 
   // Get prompt from URL if coming from style selection
   useEffect(() => {
     const promptParam = searchParams.get("prompt");
@@ -78,65 +78,94 @@ export default function DesignPage() {
       setSpecialRequirements(promptParam);
     }
   }, [searchParams]);
-
+ 
   const buildPrompt = () => {
     const parts: string[] = [];
-    
+   
     // Base prompt
     parts.push(`A ${overallSize === "small" ? "small" : overallSize === "large" ? "big" : "medium-sized"} ${projectType} floor plan`);
-    
+   
     // Rooms
     if (bedrooms[0] <= 3) {
       parts.push("with few rooms");
     } else {
       parts.push("with many rooms");
     }
-    
+   
     // Bathrooms
     if (bathrooms === "1") {
       parts.push("one bathroom");
     } else {
       parts.push("multiple bathrooms");
     }
-    
+   
     // Kitchen
     parts.push(`${kitchenSize} kitchen`);
-    
+   
     // Windows
     parts.push(windows === "many" ? "many windows" : "few windows");
-    
+   
     // Features
     if (selectedFeatures.length > 0) {
       parts.push(`with ${selectedFeatures.join(", ").toLowerCase()}`);
     }
-    
+   
     // Special requirements
     if (specialRequirements) {
       parts.push(specialRequirements);
     }
-    
+   
     return parts.join(", ");
   };
-
+ 
   const handleGenerate = async () => {
+    const prompt = buildPrompt();
+
+    if (!prompt) {
+      toast.error("Please fill in some project details first.");
+      return;
+    }
+
     setIsGenerating(true);
     toast.info("Generating floor plan...", {
       description: "This may take a moment.",
     });
-    
-    // Simulate generation - in real implementation, call HuggingFace API
-    setTimeout(() => {
-      setGeneratedImages([
-        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format",
-        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&auto=format",
-      ]);
-      setIsGenerating(false);
-      toast.success("Floor plan generated!", {
-        description: "Your design is ready to view.",
-      });
-    }, 3000);
-  };
 
+    try {
+      const res = await fetch("https://yogeshdandawate-maria26-floor-plan-lora.hf.space/api/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data: [prompt] }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Gradio typically returns the image as a data URI in data.data[0]
+      if (data.data && data.data[0]) {
+        const imgSrc = data.data[0];
+        setGeneratedImages([imgSrc]);
+        toast.success("Floor plan generated!", {
+          description: "Your design is ready to view.",
+        });
+      } else {
+        throw new Error("No image returned from the model");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Failed to generate floor plan", {
+        description: err?.message || "Something went wrong. Try again later.",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+ 
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures((prev) =>
       prev.includes(feature)
@@ -144,7 +173,7 @@ export default function DesignPage() {
         : [...prev, feature]
     );
   };
-
+ 
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -154,13 +183,12 @@ export default function DesignPage() {
             Design Your Floor Plan
           </h1>
           <p className="text-primary-foreground/80 max-w-3xl">
-            Powered by the <code className="bg-primary-foreground/10 px-2 py-0.5 rounded">maria26/Floor_Plan_LoRA</code> model, 
-            which generates architectural floor plans from text prompts. This model is part of a Bachelor Thesis from MIT 
+            Powered by the <code className="bg-primary-foreground/10 px-2 py-0.5 rounded">maria26/Floor_Plan_LoRA</code> model,
+            which generates architectural floor plans from text prompts. This model is part of a Bachelor Thesis from MIT
             exploring diffusion models for generating architectural floor plans from textual descriptions.
           </p>
         </div>
       </section>
-
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Form Section */}
@@ -202,7 +230,6 @@ export default function DesignPage() {
                 </div>
               </CardContent>
             </Card>
-
             {/* Floor Plan Specifications */}
             <Card>
               <CardHeader>
@@ -239,7 +266,6 @@ export default function DesignPage() {
                     />
                   </div>
                 </div>
-
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Number of Floors</Label>
@@ -274,7 +300,6 @@ export default function DesignPage() {
                     </Select>
                   </div>
                 </div>
-
                 <div className="space-y-3">
                   <Label>Number of Bedrooms: {bedrooms[0]}</Label>
                   <div className="flex items-center gap-4">
@@ -302,7 +327,6 @@ export default function DesignPage() {
                     </Button>
                   </div>
                 </div>
-
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Kitchen Size</Label>
@@ -331,7 +355,6 @@ export default function DesignPage() {
                 </div>
               </CardContent>
             </Card>
-
             {/* Additional Features */}
             <Card>
               <CardHeader>
@@ -355,7 +378,6 @@ export default function DesignPage() {
                     ))}
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="specialRequirements">Special Requirements</Label>
                   <Textarea
@@ -369,7 +391,6 @@ export default function DesignPage() {
               </CardContent>
             </Card>
           </div>
-
           {/* Preview & Generate Section */}
           <div className="space-y-6">
             <Card className="sticky top-24">
@@ -386,7 +407,6 @@ export default function DesignPage() {
                   </Label>
                   <p className="text-sm">{buildPrompt()}</p>
                 </div>
-
                 <Button
                   variant="hero"
                   size="lg"
@@ -406,7 +426,6 @@ export default function DesignPage() {
                     </>
                   )}
                 </Button>
-
                 {generatedImages.length > 0 && (
                   <div className="space-y-4">
                     <Label>Generated Designs</Label>
