@@ -3,11 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import {
   Wand2,
   Download,
-  Save,
-  Info,
   Loader2,
   Plus,
-  Minus
+  Minus,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -57,7 +56,7 @@ export default function DesignPage() {
   const [searchParams] = useSearchParams();
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
- 
+
   // Form state
   const [projectName, setProjectName] = useState("");
   const [projectType, setProjectType] = useState("apartment");
@@ -70,102 +69,87 @@ export default function DesignPage() {
   const [windows, setWindows] = useState("many");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [specialRequirements, setSpecialRequirements] = useState("");
- 
-  // Get prompt from URL if coming from style selection
+
   useEffect(() => {
     const promptParam = searchParams.get("prompt");
     if (promptParam) {
       setSpecialRequirements(promptParam);
     }
   }, [searchParams]);
- 
+
   const buildPrompt = () => {
+    // Map to training-style terms for best results
+    const sizeAdj = overallSize === "small" ? "small" : "big"; // Model trained on small/big, no "medium"
+    const roomAdj = bedrooms[0] <= 3 ? "few" : "many";
+    const bathAdj = bathrooms === "1" ? "one bathroom" : "multiple bathrooms";
+    const kitchenAdj = kitchenSize === "small" ? "small" : "big";
+    const windowAdj = windows === "many" ? "many" : "few";
+
     const parts: string[] = [];
-   
-    // Base prompt
-    parts.push(`A ${overallSize === "small" ? "small" : overallSize === "large" ? "big" : "medium-sized"} ${projectType} floor plan`);
-   
-    // Rooms
-    if (bedrooms[0] <= 3) {
-      parts.push("with few rooms");
-    } else {
-      parts.push("with many rooms");
-    }
-   
-    // Bathrooms
-    if (bathrooms === "1") {
-      parts.push("one bathroom");
-    } else {
-      parts.push("multiple bathrooms");
-    }
-   
-    // Kitchen
-    parts.push(`${kitchenSize} kitchen`);
-   
-    // Windows
-    parts.push(windows === "many" ? "many windows" : "few windows");
-   
-    // Features
+
+    parts.push(`Floor plan of a ${sizeAdj} ${projectType}`);
+    parts.push(`${roomAdj} rooms`);
+    parts.push(bathAdj);
+    parts.push(`${kitchenAdj} kitchen`);
+    parts.push(`${windowAdj} windows`);
+
     if (selectedFeatures.length > 0) {
       parts.push(`with ${selectedFeatures.join(", ").toLowerCase()}`);
     }
-   
-    // Special requirements
-    if (specialRequirements) {
-      parts.push(specialRequirements);
+
+    if (buildingSize) {
+      parts.push(`approximately ${buildingSize} square feet`);
     }
-   
+
+    if (specialRequirements.trim()) {
+      parts.push(specialRequirements.trim());
+    }
+
+    // Fallback prompt if somehow empty
+    if (parts.length === 0) {
+      return "Floor plan of a big apartment, many rooms, multiple bathrooms, big kitchen, many windows";
+    }
+
     return parts.join(", ");
   };
- 
+
   const handleGenerate = async () => {
     const prompt = buildPrompt();
-
-    if (!prompt) {
-      toast.error("Please fill in some project details first.");
-      return;
-    }
-
     setIsGenerating(true);
     toast.info("Generating floor plan...", {
-      description: "This may take a moment.",
+      description: "This may take 20–60 seconds on GPU.",
     });
 
     try {
-      const res = await fetch("https://yogeshdandawate-maria26-floor-plan-lora.hf.space/api/predict", {
+      const res = await fetch("/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ data: [prompt] }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
 
       if (!res.ok) {
-        throw new Error(`API error: ${res.status}`);
+        const errorText = await res.text();
+        throw new Error(`API error: ${res.status} — ${errorText}`);
       }
 
       const data = await res.json();
-
-      // Gradio typically returns the image as a data URI in data.data[0]
-      if (data.data && data.data[0]) {
-        const imgSrc = data.data[0];
-        setGeneratedImages([imgSrc]);
-        toast.success("Floor plan generated!", {
-          description: "Your design is ready to view.",
-        });
+      if (data.image) {
+        const imgSrc = `data:image/png;base64,${data.image}`;
+        setGeneratedImages((prev) => [...prev, imgSrc]); // Append to keep history
+        toast.success("Floor plan generated successfully!");
       } else {
-        throw new Error("No image returned from the model");
+        throw new Error("No image data returned");
       }
     } catch (err: any) {
       console.error(err);
-      toast.error("Failed to generate floor plan", {
-        description: err?.message || "Something went wrong. Try again later.",
+      toast.error("Generation failed", {
+        description: err.message || "Please try again.",
       });
     } finally {
       setIsGenerating(false);
     }
   };
- 
+
   const handleFeatureToggle = (feature: string) => {
     setSelectedFeatures((prev) =>
       prev.includes(feature)
@@ -173,7 +157,21 @@ export default function DesignPage() {
         : [...prev, feature]
     );
   };
- 
+
+  const downloadImage = (imgSrc: string, index: number) => {
+    const link = document.createElement("a");
+    link.href = imgSrc;
+    link.download = `${projectName || "floor-plan"}-${index + 1}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const clearImages = () => {
+    setGeneratedImages([]);
+    toast.info("Generated designs cleared");
+  };
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
@@ -183,12 +181,15 @@ export default function DesignPage() {
             Design Your Floor Plan
           </h1>
           <p className="text-primary-foreground/80 max-w-3xl">
-            Powered by the <code className="bg-primary-foreground/10 px-2 py-0.5 rounded">maria26/Floor_Plan_LoRA</code> model,
-            which generates architectural floor plans from text prompts. This model is part of a Bachelor Thesis from MIT
-            exploring diffusion models for generating architectural floor plans from textual descriptions.
+            Powered by the{" "}
+            <code className="bg-primary-foreground/10 px-2 py-0.5 rounded">
+              maria26/Floor_Plan_LoRA
+            </code>{" "}
+            model — a LoRA adapter for Stable Diffusion that generates clean architectural floor plans from text prompts. This model was developed as part of a Bachelor's thesis exploring diffusion models for floor plan generation.
           </p>
         </div>
       </section>
+
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Form Section */}
@@ -204,7 +205,7 @@ export default function DesignPage() {
               <CardContent className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="projectName">Project Name</Label>
+                    <Label htmlFor="projectName">Project Name (optional)</Label>
                     <Input
                       id="projectName"
                       placeholder="My Dream Home"
@@ -230,13 +231,12 @@ export default function DesignPage() {
                 </div>
               </CardContent>
             </Card>
+
             {/* Floor Plan Specifications */}
             <Card>
               <CardHeader>
                 <CardTitle>Floor Plan Specifications</CardTitle>
-                <CardDescription>
-                  Configure the size and layout of your floor plan
-                </CardDescription>
+                <CardDescription>Configure the size and layout</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -256,7 +256,7 @@ export default function DesignPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="buildingSize">Building Size (sq ft) - Optional</Label>
+                    <Label htmlFor="buildingSize">Exact Size (sq ft) — Optional</Label>
                     <Input
                       id="buildingSize"
                       type="number"
@@ -266,6 +266,7 @@ export default function DesignPage() {
                     />
                   </div>
                 </div>
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Number of Floors</Label>
@@ -281,7 +282,7 @@ export default function DesignPage() {
                     </Select>
                     {parseInt(numberOfFloors) > 1 && (
                       <p className="text-xs text-muted-foreground">
-                        Generate separate floor plans for each level
+                        Generate separate plans for each level or describe in special requirements
                       </p>
                     )}
                   </div>
@@ -300,6 +301,7 @@ export default function DesignPage() {
                     </Select>
                   </div>
                 </div>
+
                 <div className="space-y-3">
                   <Label>Number of Bedrooms: {bedrooms[0]}</Label>
                   <div className="flex items-center gap-4">
@@ -327,6 +329,7 @@ export default function DesignPage() {
                     </Button>
                   </div>
                 </div>
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Kitchen Size</Label>
@@ -355,6 +358,7 @@ export default function DesignPage() {
                 </div>
               </CardContent>
             </Card>
+
             {/* Additional Features */}
             <Card>
               <CardHeader>
@@ -382,7 +386,7 @@ export default function DesignPage() {
                   <Label htmlFor="specialRequirements">Special Requirements</Label>
                   <Textarea
                     id="specialRequirements"
-                    placeholder="e.g., L-shaped layout, modern style, large living room, eco-friendly features, wheelchair accessible"
+                    placeholder="e.g., L-shaped layout, modern style, large living room, open floor plan, wheelchair accessible"
                     value={specialRequirements}
                     onChange={(e) => setSpecialRequirements(e.target.value)}
                     rows={4}
@@ -391,22 +395,22 @@ export default function DesignPage() {
               </CardContent>
             </Card>
           </div>
+
           {/* Preview & Generate Section */}
           <div className="space-y-6">
             <Card className="sticky top-24">
               <CardHeader>
                 <CardTitle>Generate Floor Plan</CardTitle>
-                <CardDescription>
-                  Review your prompt and generate
-                </CardDescription>
+                <CardDescription>Review prompt and create design</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="p-4 bg-muted rounded-lg">
                   <Label className="text-xs text-muted-foreground mb-2 block">
                     Generated Prompt
                   </Label>
-                  <p className="text-sm">{buildPrompt()}</p>
+                  <p className="text-sm break-words">{buildPrompt()}</p>
                 </div>
+
                 <Button
                   variant="hero"
                   size="lg"
@@ -416,33 +420,39 @@ export default function DesignPage() {
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <Wand2 className="w-5 h-5" />
+                      <Wand2 className="w-5 h-5 mr-2" />
                       Generate Floor Plan
                     </>
                   )}
                 </Button>
+
                 {generatedImages.length > 0 && (
                   <div className="space-y-4">
-                    <Label>Generated Designs</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Generated Designs ({generatedImages.length})</Label>
+                      <Button variant="outline" size="sm" onClick={clearImages}>
+                        Clear All
+                      </Button>
+                    </div>
                     {generatedImages.map((img, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={img}
                           alt={`Generated floor plan ${index + 1}`}
-                          className="w-full rounded-lg border"
+                          className="w-full rounded-lg border shadow-md"
                         />
-                        <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                          <Button size="sm" variant="secondary">
-                            <Save className="w-4 h-4 mr-1" />
-                            Save
-                          </Button>
-                          <Button size="sm" variant="secondary">
-                            <Download className="w-4 h-4 mr-1" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => downloadImage(img, index)}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
                             Download
                           </Button>
                         </div>
