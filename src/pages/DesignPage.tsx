@@ -24,6 +24,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
+// === IMPORTANT: REPLACE THIS WITH YOUR ACTUAL HUGGING FACE SPACE URL ===
+const API_BASE_URL = "https://your-username-your-space-name.hf.space"; 
+// Example: const API_BASE_URL = "https://johnsmith-floorplan-generator.hf.space";
+// ======================================================================
+
 const projectTypes = [
   { value: "apartment", label: "Apartment" },
   { value: "single-family", label: "Single-Family House" },
@@ -78,8 +83,8 @@ export default function DesignPage() {
   }, [searchParams]);
 
   const buildPrompt = () => {
-    // Map to training-style terms for best results
-    const sizeAdj = overallSize === "small" ? "small" : "big"; // Model trained on small/big, no "medium"
+    // Model performs best with "small/big", "few/many", etc.
+    const sizeAdj = overallSize === "small" ? "small" : "big";
     const roomAdj = bedrooms[0] <= 3 ? "few" : "many";
     const bathAdj = bathrooms === "1" ? "one bathroom" : "multiple bathrooms";
     const kitchenAdj = kitchenSize === "small" ? "small" : "big";
@@ -105,7 +110,7 @@ export default function DesignPage() {
       parts.push(specialRequirements.trim());
     }
 
-    // Fallback prompt if somehow empty
+    // Safe fallback
     if (parts.length === 0) {
       return "Floor plan of a big apartment, many rooms, multiple bathrooms, big kitchen, many windows";
     }
@@ -117,11 +122,11 @@ export default function DesignPage() {
     const prompt = buildPrompt();
     setIsGenerating(true);
     toast.info("Generating floor plan...", {
-      description: "This may take 20–60 seconds on GPU.",
+      description: "This may take 20–60 seconds.",
     });
 
     try {
-      const res = await fetch("/generate", {
+      const res = await fetch(`${API_BASE_URL}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -135,7 +140,7 @@ export default function DesignPage() {
       const data = await res.json();
       if (data.image) {
         const imgSrc = `data:image/png;base64,${data.image}`;
-        setGeneratedImages((prev) => [...prev, imgSrc]); // Append to keep history
+        setGeneratedImages((prev) => [...prev, imgSrc]);
         toast.success("Floor plan generated successfully!");
       } else {
         throw new Error("No image data returned");
@@ -143,7 +148,7 @@ export default function DesignPage() {
     } catch (err: any) {
       console.error(err);
       toast.error("Generation failed", {
-        description: err.message || "Please try again.",
+        description: err.message || "Check console or try again later.",
       });
     } finally {
       setIsGenerating(false);
@@ -185,7 +190,7 @@ export default function DesignPage() {
             <code className="bg-primary-foreground/10 px-2 py-0.5 rounded">
               maria26/Floor_Plan_LoRA
             </code>{" "}
-            model — a LoRA adapter for Stable Diffusion that generates clean architectural floor plans from text prompts. This model was developed as part of a Bachelor's thesis exploring diffusion models for floor plan generation.
+            model — a LoRA adapter for Stable Diffusion that generates clean architectural floor plans from text prompts.
           </p>
         </div>
       </section>
